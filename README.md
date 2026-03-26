@@ -5,7 +5,7 @@
 It uses a custom **Retrieval-Augmented Generation (RAG)** pipeline to fetch relevant legal sections and explain them using a Large Language Model.
 
 ---
-# Live Demo :https://legalmate.streamlit.app/
+# 🚀 Live Demo :https://legalmate.streamlit.app/
 
 ## 🚀 Features
 
