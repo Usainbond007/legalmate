@@ -10,7 +10,6 @@ api_key = os.getenv("GEMINI_API_KEY") or st.secrets["GEMINI_API_KEY"]
 genai.configure(api_key=api_key)
 
 
-# 🔥 Query Enhancer
 def enhance_query(query):
     q = query.lower()
     keywords = []
@@ -35,14 +34,11 @@ def enhance_query(query):
     return query + " " + " ".join(keywords)
 
 
-# 🚀 MAIN FUNCTION
 def get_response(query, model, index, ipc_sections):
 
-    # 🔥 Step 1: Enhance query
     enhanced_query = enhance_query(query)
     print("Enhanced query:", enhanced_query)
 
-    # 🔍 Step 2: FAISS search
     query_embedding = model.encode([enhanced_query]).astype("float32")
     query_embedding = query_embedding / np.linalg.norm(query_embedding, axis=1, keepdims=True)
 
@@ -57,7 +53,6 @@ def get_response(query, model, index, ipc_sections):
             "score": float(score)
         })
 
-    # 🔥 Filter + sort
     results = [r for r in results if r["score"] > 0.25]
     results = sorted(results, key=lambda x: x["score"], reverse=True)[:3]
 
@@ -65,20 +60,17 @@ def get_response(query, model, index, ipc_sections):
     for r in results:
         print(r["section"], r["score"])
 
-    # 🚫 Handle no results
     if not results:
         return {
             "sections": [],
             "analysis": "No relevant IPC sections found. Try describing the situation differently."
         }
 
-    # 📦 Step 3: Context
     context = "\n\n".join([
         f"Section {r['section']} ({r['chapter']}): {r['text']}"
         for r in results
     ])
 
-    # 🤖 Step 4: Prompt (NO JSON, just clean text)
     prompt = f"""
 You are a legal assistant.
 
@@ -99,7 +91,6 @@ Relevant IPC sections:
 {context}
 """
 
-    # 🚀 Step 5: Gemini call
     try:
         model_gemini = genai.GenerativeModel("gemini-2.5-flash")
 
