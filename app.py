@@ -4,14 +4,13 @@ from embedcheck import load_faiss
 
 st.set_page_config(page_title="LegalEase", page_icon="⚖️", layout="centered")
 
-# 🔥 Load backend once
 @st.cache_resource
 def load_backend():
     return load_faiss()
 
 model, index, ipc_sections = load_backend()
 
-# 🔥 Custom CSS
+#Custom CSS
 st.markdown("""
 <style>
 .main {
@@ -53,14 +52,11 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 🔥 Header
 st.markdown('<div class="title">⚖️ LegalEase</div>', unsafe_allow_html=True)
 st.markdown('<div class="subtitle">Understand IPC laws in simple language</div>', unsafe_allow_html=True)
 
-# 🔥 Input box
 query = st.text_area("Describe your situation:", height=120)
 
-# 🔥 Analyze button
 if st.button("Analyze"):
 
     if not query.strip():
@@ -84,7 +80,6 @@ if st.button("Analyze"):
         else:
             st.warning("No relevant IPC sections found.")
 
-        # 🔥 Analysis (UPDATED — no JSON nonsense)
         analysis = result.get("analysis", "No response")
 
         st.markdown("### 🧠 Simple Explanation")
@@ -95,7 +90,6 @@ if st.button("Analyze"):
         </div>
         """, unsafe_allow_html=True)
 
-# 🔥 Footer
 st.markdown("""
 <br><br>
 <div class="small-text" style="text-align:center;">
