@@ -14,9 +14,7 @@ def extract_text_from_pdf(pdf_path):
 
 def preprocess_ipc(text):
 
-    # --------------------------------------------------
-    # 1️⃣ Cut everything before ACT NO.
-    # --------------------------------------------------
+    #  Cut everything before ACT NO.
     act_match = re.search(
         r'ACT\s+NO\.\s*\d+\s+OF\s+\d{4}',
         text,
@@ -26,9 +24,7 @@ def preprocess_ipc(text):
     if act_match:
         text = text[act_match.start():]
 
-    # --------------------------------------------------
-    # 2️⃣ Remove ARRANGEMENT OF SECTIONS block
-    # --------------------------------------------------
+    #  Remove ARRANGEMENT OF SECTIONS block
     text = re.sub(
         r'ARRANGEMENT OF SECTIONS.*?CHAPTER I',
         'CHAPTER I',
@@ -36,17 +32,13 @@ def preprocess_ipc(text):
         flags=re.DOTALL | re.IGNORECASE
     )
 
-    # --------------------------------------------------
-    # 3️⃣ Clean footnote-style section markers like 8[14.
-    # --------------------------------------------------
+    #Clean footnote-style section markers like 8[14.
     text = re.sub(r'\d+\[(\d+[A-Z]?\.)', r'\1', text)
 
     structured_sections = []
     current_chapter = "Unknown"
 
-    # --------------------------------------------------
-    # 4️⃣ Split by chapters
-    # --------------------------------------------------
+    # Split by chapters
     chapter_pattern = r'(?m)^(CHAPTER\s+[IVXLC]+)'
     chapter_parts = re.split(chapter_pattern, text)
 
@@ -56,9 +48,7 @@ def preprocess_ipc(text):
             current_chapter = part.strip()
         else:
 
-            # --------------------------------------------------
-            # 5️⃣ Split by potential section numbers
-            # --------------------------------------------------
+            #  Split by potential section numbers
             section_pattern = r'(?m)^\s*(\d+[A-Z]?\.)\s'
             section_parts = re.split(section_pattern, part)
 
@@ -70,10 +60,8 @@ def preprocess_ipc(text):
                 section_number = section_number_raw.replace(".", "").strip()
                 full_text = (section_number_raw + " " + section_content).strip()
 
-                # --------------------------------------------------
-                # 6️⃣ Accept only real IPC sections
+                #  Accept only real IPC sections
                 # Must contain ".—" (dot + em dash)
-                # --------------------------------------------------
                 if not re.search(r'\d+[A-Z]?\.\s.*?—', full_text):
                     continue
 
