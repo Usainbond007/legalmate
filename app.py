@@ -4,7 +4,7 @@ from embedcheck import load_faiss
 
 st.set_page_config(page_title="LegalEase", page_icon="⚖️", layout="centered")
 
-# 🔥 Load backend once (IMPORTANT for performance)
+# 🔥 Load backend once
 @st.cache_resource
 def load_backend():
     return load_faiss()
@@ -37,6 +37,7 @@ st.markdown("""
     border-radius: 12px;
     margin-top: 15px;
     box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    line-height: 1.6;
 }
 
 .section-title {
@@ -66,7 +67,6 @@ if st.button("Analyze"):
         st.warning("Please enter a valid situation.")
     else:
         with st.spinner("Analyzing your situation..."):
-
             result = get_response(query, model, index, ipc_sections)
 
         # 🔥 Sections
@@ -84,21 +84,14 @@ if st.button("Analyze"):
         else:
             st.warning("No relevant IPC sections found.")
 
-        # 🔥 Analysis
-        analysis = result.get("analysis", {})
+        # 🔥 Analysis (UPDATED — no JSON nonsense)
+        analysis = result.get("analysis", "No response")
 
         st.markdown("### 🧠 Simple Explanation")
 
         st.markdown(f"""
         <div class="card">
-            <div class="section-title">Explanation</div>
-            <p>{analysis.get("simple_explanation", "N/A")}</p>
-
-            <div class="section-title">Why it applies</div>
-            <p>{analysis.get("why_it_applies", "N/A")}</p>
-
-            <div class="section-title">Example</div>
-            <p>{analysis.get("example", "N/A")}</p>
+        {analysis}
         </div>
         """, unsafe_allow_html=True)
 
