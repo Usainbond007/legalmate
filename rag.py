@@ -1,16 +1,19 @@
 import numpy as np
 import json
-
 import os
-from google import genai
+import google.generativeai as genai
 
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+# 🔑 Configure Gemini
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+
+
+# 🔥 Query Enhancer (lightweight, no LLM needed)
 def enhance_query(query):
     q = query.lower()
     keywords = []
 
     if any(w in q for w in ["kill", "murder", "shot", "gun", "dead"]):
-        keywords.append("murder attempt IPC 302 307")
+        keywords.append("murder IPC 302 307 punishment")
 
     if any(w in q for w in ["hit", "fight", "attack", "hurt", "beat"]):
         keywords.append("assault IPC 351 352 323")
@@ -29,16 +32,17 @@ def enhance_query(query):
     return query + " " + " ".join(keywords)
 
 
+# 🚀 MAIN FUNCTION
 def get_response(query, model, index, ipc_sections):
 
     # 🔥 Step 1: Enhance query
     enhanced_query = enhance_query(query)
     print("Enhanced query:", enhanced_query)
 
+    # 🔍 Step 2: Embedding + FAISS search
     query_embedding = model.encode([enhanced_query]).astype("float32")
     query_embedding = query_embedding / np.linalg.norm(query_embedding, axis=1, keepdims=True)
 
-    # 🔍 Step 2: FAISS search
     D, I = index.search(query_embedding, k=5)
 
     results = []
@@ -59,13 +63,13 @@ def get_response(query, model, index, ipc_sections):
     for r in results:
         print(r["section"], r["score"])
 
-    # 📦 Step 3: Context
+    # 📦 Step 3: Build context
     context = "\n\n".join([
         f"Section {r['section']} ({r['chapter']}): {r['text']}"
         for r in results
     ])
 
-    # 🤖 Step 4: Gemini prompt
+    # 🤖 Step 4: Prompt
     prompt = f"""
 You are a legal assistant.
 
@@ -85,33 +89,34 @@ Return ONLY valid JSON:
 }}
 """
 
-    # 🚀 Step 5: Gemini API call (NEW SDK STYLE)
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=prompt
-    )
+    # 🚀 Step 5: Gemini call (FIXED)
+    try:
+        model_gemini = genai.GenerativeModel("gemini-pro")
+        response = model_gemini.generate_content(prompt)
+        raw_text = response.text
 
-    raw_text = response.text
+    except Exception as e:
+        print("Gemini Error:", str(e))
+        return {
+            "sections": results,
+            "analysis": {
+                "simple_explanation": "AI service unavailable.",
+                "why_it_applies": "",
+                "example": ""
+            }
+        }
+
     print("\n===== GEMINI OUTPUT =====\n", raw_text)
 
-    # 🔥 Step 6: Safe parsing
+    # 🔥 Step 6: Safe JSON parsing
     try:
-        # First level parse
-        outer = json.loads(raw_text)
-
-        # If Gemini already returned proper JSON
-        if isinstance(outer, dict):
-            llm_output = outer
-        else:
-            raise ValueError("Not dict")
+        llm_output = json.loads(raw_text)
 
     except:
         try:
-            # Try extracting JSON inside text
             start = raw_text.find("{")
             end = raw_text.rfind("}") + 1
             json_str = raw_text[start:end]
-
             llm_output = json.loads(json_str)
 
         except:
